@@ -1,0 +1,22 @@
+body {
+    font-family: 'Roboto-Regular';
+    background-color: $body-col;
+}
+.wrap-car {
+    border-bottom: #c21515 dashed 3px;
+    margin-bottom: 10px;
+}
+.car-icon {
+    position: relative;
+    top: 20px;
+    width: 70px;
+    height: 70px;
+}
+.create,
+.update {
+    display: flex;
+    align-items: center;
+}
+.groupe-controls {
+    margin-bottom: 10px;
+}

@@ -4,6 +4,7 @@ export const storage = {
     currentIdUpdate: 0,
     updateNameCar: '',
     updateColorCar: '',
+    numberCurrentPage: 1,
 }
 
 export const getRandomColorHex = () => {

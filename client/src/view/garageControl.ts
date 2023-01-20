@@ -4,7 +4,7 @@ import { createCar, updateCar, getCars } from "../api/api";
 import { getObjCar, getImageCar } from "./car";
 import { storage, getRandomNameCar, getRandomColorHex } from "../helpers/helpers";
 import { renderGaragePage, deleteAllCars } from "./garagePages";
-import { renderNumberCarsTitle } from "./additional";
+import { renderNumberCarsTitle, onOffButtonsPage } from "./additional";
 import { ADD_CARS } from "../components/constants";
 
 const createCarData = {
@@ -93,9 +93,30 @@ const getControlsUpdate = () => {
     return wrapControls;
 }
 
-const startRace = () => {}
+const startRace = () => {
+    const startButtons = document.querySelectorAll('.start-car');
+    const stopButtons = document.querySelectorAll('.stop-car');
+    const imgCar = document.querySelectorAll('.car-icon');
+    imgCar.forEach((el) => {
+        const car = el as SVGElement;
+        car.style.transform = `translateX(500px)`;
+        car.style.transition = '2s';
+    });
+    startButtons.forEach((btn) => btn.setAttribute('disabled', ''));
+    stopButtons.forEach((btn) => btn.removeAttribute('disabled'));
+}
 
 const resetRace = () => {
+    const startButtons = document.querySelectorAll('.start-car');
+    const stopButtons = document.querySelectorAll('.stop-car');
+    const imgCar = document.querySelectorAll('.car-icon');
+    imgCar.forEach((el) => {
+        const car = el as SVGElement;
+        car.style.transform = `translateX(0)`;
+        car.style.transition = '0s';
+    });
+    stopButtons.forEach((btn) => btn.setAttribute('disabled', ''));
+    startButtons.forEach((btn) => btn.removeAttribute('disabled'));
 }
 
 const generateCars = async () => {
@@ -105,11 +126,14 @@ const generateCars = async () => {
         await createCar({ name: nameCar, color: colorCar });
     }
     renderNumberCarsTitle();
-    renderGaragePage();
+    renderGaragePage(storage.numberCurrentPage);
+    console.log(storage.numberCurrentPage);
 }
 
 const deleteCars = () => {
     deleteAllCars();
+    storage.numberCurrentPage = 1;
+    setTimeout(() => {onOffButtonsPage()}, 400) ;
 }
 
 const getControlsRace = () => {

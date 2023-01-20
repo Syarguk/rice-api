@@ -8,3 +8,8 @@ export interface CreateCar {
     name: string;
     color: string;
 }
+
+export interface QueryParams {
+    key: string;
+    value: number | string;
+}

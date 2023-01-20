@@ -1,9 +1,10 @@
 import { Car } from '../types/types';
 import { button } from '../components/button';
-import { deleteCar, getCar } from '../api/api';
+import { deleteCar, getCar, startStopCar } from '../api/api';
 import { storage } from '../helpers/helpers';
 import { renderNumberCarsTitle } from './additional';
 import { renderGaragePage } from './garagePages';
+import { SPEED_CORRECTION } from '../components/constants';
 
 const updateCarInGarage = (e: Event) => {
     const target = e.target as HTMLElement;
@@ -30,8 +31,47 @@ const deleteCarFromGarage = async (e: Event) => {
     const carId = Number(target.id.slice(6));
     await deleteCar(carId);
     document.getElementById(`car${carId}`)?.remove();
-    renderGaragePage();
+    renderGaragePage(storage.numberCurrentPage);
     renderNumberCarsTitle();
+}
+
+const driveCar = async (e: Event) => {
+    const target = e.target as HTMLElement;
+    const btnId = Number(target.id.slice(5));
+    const imgCar = target.parentElement?.nextElementSibling?.children[0] as SVGSVGElement;
+    const lengthCar = imgCar.clientWidth;
+    let lengthTrack = 0;
+    if (target.parentElement) {
+        lengthTrack = target.parentElement.clientWidth - lengthCar;
+    }
+    if (target.textContent === 'A') {
+        const dataDrive = await startStopCar([
+            {key: 'id', value: btnId}, 
+            {key: 'status', value: 'started'}
+        ]);
+        const velocityCar = dataDrive.velocity / SPEED_CORRECTION;
+        // imgCar.style.transform = `translateX(${lengthTrack}px)`;
+        // imgCar.style.transition = `${velocityCar}ms`;
+        function moveCar(step: number) {
+            imgCar.style.transform = `translateX(${step}px)`;
+        }
+        let initPix = 0;
+        const id = setInterval(function() {
+            if (initPix > lengthTrack) {
+                clearInterval(id);
+                target.nextElementSibling?.removeAttribute('disabled');
+                return;
+            }
+            moveCar(initPix);
+            initPix += 3;
+        }, velocityCar);
+        target.setAttribute('disabled', '');
+    } else {
+        imgCar.style.transform = `translateX(0)`;
+        imgCar.style.transition = '0s';
+        target.previousElementSibling?.removeAttribute('disabled');
+        target.setAttribute('disabled', '');
+    }
 }
 
 export const getImageCar = (colorCar: string) => {
@@ -57,13 +97,21 @@ export const getObjCar = (dataCar: Car) => {
     const nameCar = document.createElement('h4');
     const selectCarBtn = button('SELECT', `select${dataCar.id}`);
     const removeCarBtn = button('REMOVE', `remove${dataCar.id}`);
+    const startCarBtn = button('A', `start${dataCar.id}`);
+    const stopCarBtn = button('B', `stopp${dataCar.id}`, 'disabled');
+    startCarBtn.classList.add('start-car');
+    stopCarBtn.classList.add('stop-car');
     selectCarBtn.addEventListener('click', updateCarInGarage);
     removeCarBtn.addEventListener('click', deleteCarFromGarage);
+    startCarBtn.addEventListener('click', driveCar);
+    stopCarBtn.addEventListener('click', driveCar);
     control.classList.add('control-car');
     nameCar.textContent = `${dataCar.name}`;
     control.append(nameCar);
     control.append(selectCarBtn);
     control.append(removeCarBtn);
+    control.append(startCarBtn);
+    control.append(stopCarBtn);
     const car = getImageCar(dataCar.color);
     wrapCar.append(control);
     wrapCar.append(car);

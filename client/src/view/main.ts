@@ -3,6 +3,8 @@ import { getCars } from "../api/api";
 import { getObjCar } from "./car";
 import { getGarageControls } from "./garageControl";
 import { QUANTITY_CARS_PAGE } from "../components/constants";
+import { renderGaragePage } from "./garagePages";
+import { storage } from "../helpers/helpers";
 
 const getGarage =  () => {
     const garage = document.createElement('div');
@@ -42,11 +44,46 @@ const winners = () => {
     return winners;
 }
 
+const changePage = async (e: Event) => {
+    const prevButton = document.getElementById('prev');
+    const nextButton = document.getElementById('next');
+    const target = e.target as HTMLElement;
+    const allCars = await getCars();
+    if (target.id === 'prev') {
+        storage.numberCurrentPage -= 1;
+    } else if (target.id === 'next') {
+        storage.numberCurrentPage += 1;
+    }
+    renderGaragePage(storage.numberCurrentPage);
+    console.log(storage.numberCurrentPage);
+    /* 
+    if (storage.numberCurrentPage * QUANTITY_CARS_PAGE - QUANTITY_CARS_PAGE > 0) {
+        prevButton?.removeAttribute('disabled');
+    } else {
+        prevButton?.setAttribute('disabled', '');
+    }
+    if (storage.numberCurrentPage * QUANTITY_CARS_PAGE < allCars.length) {
+        nextButton?.removeAttribute('disabled');
+    } else {
+        nextButton?.setAttribute('disabled', '');
+    } */
+}
+
 const footer = () => {
     const wrapFooter = document.createElement('div');
     wrapFooter.classList.add('footer');
-    const prev = button('PREV', 'prev');
+    const prev = button('PREV', 'prev', 'disabled');
     const next = button('NEXT', 'next');
+    (async function name() {
+        const allCars = await getCars();
+        if (allCars.length < QUANTITY_CARS_PAGE) {
+            next.setAttribute('disabled', '');
+        } else {
+            next.removeAttribute('disabled');
+        }
+    })();
+    prev.addEventListener('click', changePage);
+    next.addEventListener('click', changePage);
     wrapFooter.append(prev);
     wrapFooter.append(next);
     return wrapFooter;

@@ -24,7 +24,7 @@ export const renderGaragePage = async (currentPage: number) => {
 }
 
 export const deleteAllCars = async () => {
-    const garageTitle = document.querySelector('.garage-title');
+    const garageTitle = document.querySelector('.page-title');
     const allCars = await getCars();
     const idAllCars = allCars.map((car: Car) => car.id);
     idAllCars.forEach((id: number) => deleteCar(id));

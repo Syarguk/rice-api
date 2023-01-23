@@ -55,13 +55,20 @@ export const startStopCar = async (queryParams: QueryParams[]) => {
     const response = await fetch(`${engine}${generateQueryString(queryParams)}`, {
         method: 'PATCH'
     });
-    const data = await response.json();
-    return data;
+    if (!response.ok) {
+        return false;
+    } else {
+        const data = await response.json();
+        return data;
+    }
 }
 
-/* 
+export const startCars = (idCars: string[]) => {
+    const requests = idCars.map((id) => fetch(`${engine}?id=${id}&status=started`, {method: 'PATCH'}));
+    return requests;
+}
 
-export const getNumberAllCars = async () => {
-    const response = await fetch('http://127.0.0.1:3000/garage?_page=1');
-    return response.headers.get('X-Total-Count');
-} */
+export const stopCars = (idCars: string[]) => {
+    const requests = idCars.map((id) => fetch(`${engine}?id=${id}&status=stopped`, {method: 'PATCH'}));
+    return requests;
+}

@@ -1,7 +1,9 @@
 import { button } from "../components/button";
+import { Car } from "../types/types";
 import { getCars } from "../api/api";
 import { getObjCar } from "./car";
 import { getGarageControls } from "./garageControl";
+import { getWinnerControls } from "./winnerControl";
 import { QUANTITY_CARS_PAGE } from "../components/constants";
 import { renderGaragePage } from "./garagePages";
 import { storage } from "../helpers/helpers";
@@ -10,27 +12,36 @@ const getGarage =  () => {
     const garage = document.createElement('div');
     garage.classList.add('garage');
     const title = document.createElement('h3');
-    title.classList.add('garage-title');
+    const numberPageWrap = document.createElement('h4');
+    title.classList.add('page-title');
     title.textContent = 'Garage';
+    numberPageWrap.classList.add('number-page');
+    numberPageWrap.textContent = 'Page - ';
     const numberCars = document.createElement('span');
+    const numberPage = document.createElement('span');
+    numberPage.textContent = `${storage.numberCurrentPage}`;
     title.append(numberCars);
-    garage.append(title);
+    numberPageWrap.append(numberPage);
     garage.append(getGarageControls());
-    let quantityIterations = 0;
+    garage.append(title);
+    garage.append(numberPageWrap);
+    const firstElem = (storage.numberCurrentPage - 1) * QUANTITY_CARS_PAGE;
+    const lastElem = firstElem + QUANTITY_CARS_PAGE;
     const res = async () => {
-        const dataCars = await getCars();
-        if (dataCars.length !== 0) {
-            numberCars.textContent = ` (${dataCars.length})`;
+        const allCarsData = await getCars();
+        const currentCars = allCarsData.filter((el: Car, ind: number) => {
+            if (ind >= firstElem && ind < lastElem) {
+                return true;
+            }
+            return false;
+        });
+        for ( let car of currentCars) {
+            garage.append(getObjCar(car));
+        }
+        if (allCarsData.length !== 0) {
+            numberCars.textContent = ` (${allCarsData.length})`;
         } else {
             numberCars.textContent = '';
-        }
-        if (dataCars.length < QUANTITY_CARS_PAGE) {
-            quantityIterations = dataCars.length;
-        } else {
-            quantityIterations = QUANTITY_CARS_PAGE;
-        }
-        for (let i = 0; i < quantityIterations; i += 1) {
-            garage.append(getObjCar(dataCars[i]));
         }
     }
     res();
@@ -40,33 +51,33 @@ const getGarage =  () => {
 const winners = () => {
     const winners = document.createElement('div');
     winners.classList.add('winners');
-    winners.innerHTML = '<h3>Winners</h3>';
+    const title = document.createElement('h3');
+    const numberPageWrap = document.createElement('h4');
+    title.classList.add('page-title');
+    title.textContent = 'Winners';
+    numberPageWrap.classList.add('number-page');
+    numberPageWrap.textContent = 'Page - ';
+    const numberCars = document.createElement('span');
+    const numberPage = document.createElement('span');
+    numberPage.textContent = `${storage.numberCurrentPage}`;
+    title.append(numberCars);
+    numberPageWrap.append(numberPage);
+    winners.append(title);
+    winners.append(numberPageWrap);
+    winners.append(getWinnerControls());
     return winners;
 }
 
-const changePage = async (e: Event) => {
-    const prevButton = document.getElementById('prev');
-    const nextButton = document.getElementById('next');
+const changePage = (e: Event) => {
+    const elemNumberPage = document.querySelector('.number-page span');
     const target = e.target as HTMLElement;
-    const allCars = await getCars();
     if (target.id === 'prev') {
         storage.numberCurrentPage -= 1;
     } else if (target.id === 'next') {
         storage.numberCurrentPage += 1;
     }
     renderGaragePage(storage.numberCurrentPage);
-    console.log(storage.numberCurrentPage);
-    /* 
-    if (storage.numberCurrentPage * QUANTITY_CARS_PAGE - QUANTITY_CARS_PAGE > 0) {
-        prevButton?.removeAttribute('disabled');
-    } else {
-        prevButton?.setAttribute('disabled', '');
-    }
-    if (storage.numberCurrentPage * QUANTITY_CARS_PAGE < allCars.length) {
-        nextButton?.removeAttribute('disabled');
-    } else {
-        nextButton?.setAttribute('disabled', '');
-    } */
+    if (elemNumberPage) elemNumberPage.textContent = `${storage.numberCurrentPage}`;
 }
 
 const footer = () => {

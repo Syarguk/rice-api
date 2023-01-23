@@ -2,9 +2,12 @@ import { carModels } from "../data/carModels";
 
 export const storage = {
     currentIdUpdate: 0,
-    updateNameCar: '',
-    updateColorCar: '',
+    quantityCarsGarage: 0,
     numberCurrentPage: 1,
+    createName: '',
+    createColor: '#ff0000',
+    updateName: '',
+    updateColor: '#ff0000'
 }
 
 export const getRandomColorHex = () => {
@@ -19,7 +22,7 @@ export const getRandomColorHex = () => {
 
 export const getRandomNameCar = () => {
     const carsBrandModel = Object.entries(carModels);
-    const randomIndexBrand = Math.floor(Math.random() * 3);
+    const randomIndexBrand = Math.floor(Math.random() * 4);
     const randomIndexModel = Math.floor(Math.random() * 10);
     const randomBrand = carsBrandModel[randomIndexBrand][0];
     const randomModel = carsBrandModel[randomIndexBrand][1][randomIndexModel];

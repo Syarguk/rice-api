@@ -7,5 +7,8 @@ export const carModels = {
     ],
     Ford: [
         'EcoSport S', 'Edge ST', 'Explorer ST', 'Bronco® SUV', 'MUSTANG MACH-E', 'F-150® RAPTOR', 'Escape', 'Ranger XLT', 'Ranger LARIAT', 'MAVERICK'
+    ],
+    Opel: [
+        'Astra Electric', 'Crossland', 'Mokka', 'Corsa-e', 'Grandland', 'Vivaro-combi', 'Zafira-e Life', 'Combo-e Life', 'Grandland Electric', 'Astra Hatchback Hybrid'
     ]
 }

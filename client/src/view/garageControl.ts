@@ -1,10 +1,10 @@
 import { button } from "../components/button";
 import { input, inputColor } from "../components/input";
-import { createCar, updateCar, getCars } from "../api/api";
+import { createCar, updateCar, startCars, startStopCar, getCars } from "../api/api";
 import { getObjCar, getImageCar } from "./car";
 import { storage, getRandomNameCar, getRandomColorHex } from "../helpers/helpers";
 import { renderGaragePage, deleteAllCars } from "./garagePages";
-import { renderNumberCarsTitle, onOffButtonsPage } from "./additional";
+import { renderNumberCarsTitle, onOffButtonsPage, moveCar } from "./additional";
 import { ADD_CARS } from "../components/constants";
 
 const createCarData = {
@@ -15,20 +15,23 @@ const createCarData = {
 const changeInputCreate = (e: Event) => {
     const target = e.target as HTMLInputElement;
     createCarData.name = target.value;
+    storage.createName = target.value;
 }
 
 const changeInputUpdate = (e: Event) => {
     const target = e.target as HTMLInputElement;
-    storage.updateNameCar = target.value;}
+    storage.updateName = target.value;
+}
 
 const changeInputColorCreate = (e: Event) => {
     const target = e.target as HTMLInputElement;
     createCarData.color = target.value;
+    storage.createColor = target.value;
 }
 
 const changeInputColorUpdate = (e: Event) => {
     const target = e.target as HTMLInputElement;
-    storage.updateColorCar = target.value;}
+    storage.updateColor = target.value;}
 
 const sendDataForCreate = () => {
     const garage = document.querySelector('.garage');
@@ -52,12 +55,11 @@ const sendDataForUpdate = () => {
     update.setAttribute('disabled', '');
     const res = async () => {
         const updatedCarData = await updateCar(storage.currentIdUpdate, {
-            name: storage.updateNameCar,
-            color: storage.updateColorCar
+            name: storage.updateName,
+            color: storage.updateColor
         });
-        const updateImgCar = getImageCar(storage.updateColorCar);
-        console.log(currentCarName);
-        if (currentCarName) currentCarName.textContent = storage.updateNameCar;
+        const updateImgCar = getImageCar(storage.updateColor);
+        if (currentCarName) currentCarName.textContent = storage.updateName;
         if (currentCarImg?.innerHTML) currentCarImg.innerHTML = updateImgCar.innerHTML;
     }
     res();
@@ -69,6 +71,8 @@ const getControlsCreate = () => {
     const inpCreate = input('inp-name-create');
     const inpColCreate = inputColor('inp-color-create');
     const btnCreate = button('CREATE', 'create');
+    inpCreate.value = storage.createName;
+    inpColCreate.value = storage.createColor;
     inpCreate.addEventListener('change', changeInputCreate);
     inpColCreate.addEventListener('change', changeInputColorCreate);
     btnCreate.addEventListener('click', sendDataForCreate);
@@ -84,6 +88,8 @@ const getControlsUpdate = () => {
     const inpUpdate = input('inp-name-update', 'disabled');
     const inpColUpdate = inputColor('inp-color-update', 'disabled');
     const btnUpdate = button('UPDATE', 'update', 'disabled');
+    inpUpdate.value = storage.updateName;
+    inpColUpdate.value = storage.updateColor;
     inpUpdate.addEventListener('change', changeInputUpdate);
     inpColUpdate.addEventListener('change', changeInputColorUpdate);
     btnUpdate.addEventListener('click', sendDataForUpdate);
@@ -94,32 +100,43 @@ const getControlsUpdate = () => {
 }
 
 const startRace = () => {
-    const startButtons = document.querySelectorAll('.start-car');
-    const stopButtons = document.querySelectorAll('.stop-car');
-    const imgCar = document.querySelectorAll('.car-icon');
-    imgCar.forEach((el) => {
-        const car = el as SVGElement;
-        car.style.transform = `translateX(500px)`;
-        car.style.transition = '2s';
-    });
-    startButtons.forEach((btn) => btn.setAttribute('disabled', ''));
-    stopButtons.forEach((btn) => btn.removeAttribute('disabled'));
+    const wrapCars = document.querySelectorAll('.wrap-car');
+    let idCars: string[] = [];
+    wrapCars.forEach( (el) => {
+        idCars.push(el.id.slice(3));
+    })
+    const requests = startCars(idCars);
+    Promise.all(requests)
+    .then((responses) => Promise.all(responses.map((r) => r.json())))
+    .then((vels) => vels.forEach((vel, ind) => {
+        moveCar(idCars[ind], vel.velocity);
+    }));
 }
 
-const resetRace = () => {
+const resetRace = async () => {
+    const wrapCar = document.querySelector('.wrap-car');
+    let idCar = '';
+    if (wrapCar) idCar = wrapCar.id.slice(3)
     const startButtons = document.querySelectorAll('.start-car');
     const stopButtons = document.querySelectorAll('.stop-car');
     const imgCar = document.querySelectorAll('.car-icon');
-    imgCar.forEach((el) => {
+    const stopData = await startStopCar([
+        {key: 'id', value: idCar},
+        {key: 'status', value: 'stopped'}
+    ]);
+    if (stopData) {
+        imgCar.forEach((el) => {
         const car = el as SVGElement;
         car.style.transform = `translateX(0)`;
         car.style.transition = '0s';
-    });
-    stopButtons.forEach((btn) => btn.setAttribute('disabled', ''));
-    startButtons.forEach((btn) => btn.removeAttribute('disabled'));
+        });
+        stopButtons.forEach((btn) => btn.setAttribute('disabled', ''));
+        startButtons.forEach((btn) => btn.removeAttribute('disabled'));
+    }
 }
 
 const generateCars = async () => {
+    const btnDelete = document.getElementById('delete');
     for (let i = 0; i < ADD_CARS; i += 1) {
         const nameCar = getRandomNameCar();
         const colorCar = getRandomColorHex();
@@ -127,13 +144,22 @@ const generateCars = async () => {
     }
     renderNumberCarsTitle();
     renderGaragePage(storage.numberCurrentPage);
-    console.log(storage.numberCurrentPage);
+    const allCars = await getCars();
+    if (allCars.length !== 0 && btnDelete !== null) {
+        btnDelete.removeAttribute('disabled');
+    };
 }
 
-const deleteCars = () => {
+const deleteCars = (e: Event) => {
+    const target = e.target as HTMLElement;
     deleteAllCars();
     storage.numberCurrentPage = 1;
     setTimeout(() => {onOffButtonsPage()}, 400) ;
+    target.setAttribute('disabled', '');
+    (async function name() {
+        const allCars = await getCars();
+        if (allCars.length === 0) renderNumberCarsTitle();
+    })();
 }
 
 const getControlsRace = () => {
@@ -143,6 +169,10 @@ const getControlsRace = () => {
     const btnReset = button('RESET', 'reset');
     const genCars = button('GENERATE CARS', 'generate');
     const delCars = button('DELETE CARS', 'delete');
+    (async function name() {
+        const allCars = await getCars();
+        if (allCars.length === 0) delCars.setAttribute('disabled', '');
+    })();
     btnRace.addEventListener('click', startRace);
     btnReset.addEventListener('click', resetRace);
     genCars.addEventListener('click', generateCars);

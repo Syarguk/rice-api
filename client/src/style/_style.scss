@@ -2,6 +2,15 @@ body {
     font-family: 'Roboto-Regular';
     background-color: $body-col;
 }
+.header {
+    margin-bottom: 15px;
+}
+.page-title {
+    margin-bottom: 5px;
+}
+.number-page {
+    margin-top: 5px;
+}
 .wrap-car {
     border-bottom: #c21515 dashed 3px;
     margin-bottom: 10px;
@@ -19,4 +28,14 @@ body {
 }
 .groupe-controls {
     margin-bottom: 10px;
+}
+.tbl-winners {
+    border: black solid 2px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    background-color: rgb(202, 202, 249);
+}
+.tbl-winners th {
+    border-right: black solid 1px;
+    padding: 5px 5px;
 }

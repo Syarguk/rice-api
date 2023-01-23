@@ -2,9 +2,8 @@ import { Car } from '../types/types';
 import { button } from '../components/button';
 import { deleteCar, getCar, startStopCar } from '../api/api';
 import { storage } from '../helpers/helpers';
-import { renderNumberCarsTitle } from './additional';
+import { renderNumberCarsTitle, moveCar } from './additional';
 import { renderGaragePage } from './garagePages';
-import { SPEED_CORRECTION } from '../components/constants';
 
 const updateCarInGarage = (e: Event) => {
     const target = e.target as HTMLElement;
@@ -20,8 +19,8 @@ const updateCarInGarage = (e: Event) => {
         inputNameUpdate.value = carData.name;
         inputColorUpdate.value = carData.color;
         storage.currentIdUpdate = carData.id;
-        storage.updateNameCar = carData.name;
-        storage.updateColorCar = carData.color;
+        storage.updateName = carData.name;
+        storage.updateColor = carData.color;
     }
     res();
 }
@@ -37,40 +36,25 @@ const deleteCarFromGarage = async (e: Event) => {
 
 const driveCar = async (e: Event) => {
     const target = e.target as HTMLElement;
-    const btnId = Number(target.id.slice(5));
+    const btnId = target.id.slice(5);
     const imgCar = target.parentElement?.nextElementSibling?.children[0] as SVGSVGElement;
-    const lengthCar = imgCar.clientWidth;
-    let lengthTrack = 0;
-    if (target.parentElement) {
-        lengthTrack = target.parentElement.clientWidth - lengthCar;
-    }
     if (target.textContent === 'A') {
-        const dataDrive = await startStopCar([
-            {key: 'id', value: btnId}, 
+        const startData = await startStopCar([
+            {key: 'id', value: btnId},
             {key: 'status', value: 'started'}
         ]);
-        const velocityCar = dataDrive.velocity / SPEED_CORRECTION;
-        // imgCar.style.transform = `translateX(${lengthTrack}px)`;
-        // imgCar.style.transition = `${velocityCar}ms`;
-        function moveCar(step: number) {
-            imgCar.style.transform = `translateX(${step}px)`;
-        }
-        let initPix = 0;
-        const id = setInterval(function() {
-            if (initPix > lengthTrack) {
-                clearInterval(id);
-                target.nextElementSibling?.removeAttribute('disabled');
-                return;
-            }
-            moveCar(initPix);
-            initPix += 3;
-        }, velocityCar);
-        target.setAttribute('disabled', '');
+        moveCar(btnId, startData.velocity);
     } else {
-        imgCar.style.transform = `translateX(0)`;
-        imgCar.style.transition = '0s';
-        target.previousElementSibling?.removeAttribute('disabled');
-        target.setAttribute('disabled', '');
+        const stopData = await startStopCar([
+            {key: 'id', value: btnId},
+            {key: 'status', value: 'stopped'}
+        ]);
+        if (stopData) {
+            imgCar.style.transform = `translateX(0)`;
+            imgCar.style.transition = '0s';
+            target.previousElementSibling?.removeAttribute('disabled');
+            target.setAttribute('disabled', '');
+        }
     }
 }
 
